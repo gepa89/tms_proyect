@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Servicio de PHP con Apache
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tms-auth-app
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html
+      - ./config/apache/000-default.conf:/etc/apache2/sites-available/000-default.conf # El Virtual Host
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: auth_service
+      MYSQL_USER: uauth
+      MYSQL_PASSWORD: uauth123
+    networks:
+      - tms-network
+    ports:
+      - "8000:80" # Cambiado a 80, que es el puerto predeterminado de Apache
+      - "9003:9003" # Puerto para Xdebug (opcional)
+    depends_on:
+      - mysql
+
+  # Servicio de MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: tms-auth-db
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auth_service
+      MYSQL_USER: uauth
+      MYSQL_PASSWORD: uauth123
+    networks:
+      - tms-network
+    ports:
+      - "3306:3306" # Exponer puerto para conexiones a MySQL
+
+networks:
+  tms-network:
+    driver: bridge
+
